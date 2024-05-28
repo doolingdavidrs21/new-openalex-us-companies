@@ -262,9 +262,9 @@ def df_to_dict(df: pl.DataFrame,key_col: str,value_col: str) -> Dict[Any,Any]:
 
 kw_dict = df_to_dict(dfinfo, "id", "keywords")
 
-st.write(kw_dict['https://openalex.org/W3041133507'])
+#st.write(kw_dict['https://openalex.org/W3041133507'])
 
-st.write(centroids.columns)
+#st.write(centroids.columns)
 
 
 # add in the affiliations as nodes as well; that row, author, paper, affil. all three get links. ok.
