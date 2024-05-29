@@ -170,8 +170,9 @@ def load_centroids_asat():
     # dg = pd.read_csv("penguins.csv", engine="pyarrow")
     #  df = pd.read_json(df.to_json())
     # dg = pd.read_pickle('updatejammingcentroids2d.pkl.gz')
-    pl_centroids = pl.read_parquet("updatejammingcentroids2d.parquet", use_pyarrow=True)
+   # pl_centroids = pl.read_parquet("updatejammingcentroids2d.parquet", use_pyarrow=True)
     # return dg
+    pl_centroids = pl.read_parquet("updatejammingcentroids2d.parquet", use_pyarrow=True)
     pl_centroids = pl_centroids.filter(pl.col("cluster") != -1)
     return pl_centroids
 
@@ -179,6 +180,7 @@ def load_centroids_asat():
 #@st.cache_data()
 def load_dftriple_asat():
     pl_dftriple = pl.read_parquet("updatejammingdftriple2d.parquet", use_pyarrow=True)
+   # pl_dftriple = pl.scan_parquet("updatejammingdftriple2d.parquet")
    # pl_dftriple = pl_dftriple.filter(pl.col("paper_cluster") != -1)
   #  pl_dftriple = pl_dftriple.with_columns(
   #      pl.col("type")
@@ -367,12 +369,62 @@ def create_nx_graph(df: pl.dataframe.frame.DataFrame, cl:int) -> nx.Graph:
     return g
 
 
+
+
+
+
+def optimized_create_nx_graph(df: pl.DataFrame, cluster_id:int) -> nx.Graph:
+    """
+    Creates a NetworkX graph from a filtered subset of the input DataFrame.
+    
+    Parameters:
+    - df: A Polars DataFrame containing academic paper data.
+    - cluster_id: An integer representing the cluster ID to filter the DataFrame.
+    
+    Returns:
+    - A NetworkX graph constructed from the filtered DataFrame.
+    """
+    # Filter the DataFrame for the specified cluster ID
+    filtered_df = df.filter(pl.col("paper_cluster") == cluster_id)
+    
+    # Initialize the NetworkX graph
+    g = nx.Graph()
+    
+    # Add nodes and edges based on the filtered DataFrame
+    for _, row in filtered_df.iterrows():
+        # Adding nodes for papers, authors, and affiliations
+        g.add_node(row['paper_id'], group='work', title=row['paper_title'])
+        g.add_node(row['paper_author_id'], group='author', title=row['paper_author_display_name'])
+        g.add_node(row['id'], group='affiliation', title=row['display_name'] + '\n' + row['country_code'])
+        
+        # Adding edges based on relationships defined in the DataFrame
+        # Assuming 'source' and 'funder_list' contain identifiers that can be used as nodes
+        if row['source']:
+            source_node = row['source']
+            g.add_edge(row['paper_id'], source_node, type='published_in')
+            g.add_edge(row['paper_author_id'], source_node, type='authors_of')
+            g.add_edge(row['id'], source_node, type='affiliated_with')
+        
+        if row['funder_list']:
+            for funder in row['funder_list']:
+                g.add_edge(row['paper_id'], funder, type='funded_by')
+                g.add_edge(row['paper_author_id'], funder, type='authors_of_funded')
+                g.add_edge(row['id'], funder, type='affiliated_with_funded')
+    
+    return g
+
+
+
+
+
+
+
 def create_pyvis_html(cl: int, filename: str = "pyvis_coauthorships_graph.html"):
     """
     wrapper function that calls create_nx_graph to finally 
     produce an interactive pyvis standalone html file
     """
-    g_nx = create_nx_graph(dftriple, cl);
+    g_nx = create_nx_graph(dftriple, cl) # cn cahnge back to orginal funciotn
     h = Network(height="1000px",
                 width="100%",
                 cdn_resources="remote", 
@@ -620,7 +672,7 @@ def new_get_country_cluster_sort(dc: pl.DataFrame, cl: int):
     corresponding to the selected centroid.
     """
     # Filter the DataFrame based on the specified cluster value
-    filtered_dc = dc.filter((pl.col("paper_cluster") == cl))
+    filtered_dc = dc.filter((pl.col("paper_cluster") == cl)).collect()
     
     # Group by 'country_code', sum 'paper_cluster_score', and sort the result
     grouped_and_sorted = filtered_dc.groupby('country_code').agg([
@@ -808,7 +860,7 @@ dvjournals, kwjournals = get_journals_cluster_sort(dftriple, selected_cluster)
 
 dvconferences, kwconferences = get_conferences_cluster_sort(dftriple, selected_cluster)
 
-#htmlfile = create_pyvis_html(selected_cluster)
+htmlfile = create_pyvis_html(selected_cluster)
 
 dftime = get_time_series(dfinfo, selected_cluster)
 
@@ -890,6 +942,20 @@ with tab5:
        key='download-conferences-csv'
     )
 
+###################################################
+
+
+
+with tab6:
+    st.write("Coauthorship Graph (Papers and Authors)")
+    components.html(htmlfile.read(), height=1100)
+    
+
+
+
+
+
+#####################
 
 with tab7:
     st.write("Country-Country Collaborations")
