@@ -113,12 +113,12 @@ Please end with a complete sentence.
 
 detailed_topic_template = """
 I want you to act as a naming consultant for scientific topics based on article abstracts.
-Act like a Systems Engineering and Technical Assistance (SETA) consultant. 
 
 
 
 Provde a global summary of the scientific topics related to these texts: {topic_texts}?
 Your summary should give an overall sense of the topic and not give details of each abstract individually.
+Extract a handful of key phrases, the technical jargon and provide a definition and their potential dual use applications. 
 End with a complete sentence; the last character should be a period '.'.
 """
 
