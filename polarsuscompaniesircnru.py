@@ -39,8 +39,8 @@ MAPBOX_TOKEN = st.secrets["MAPBOX_TOKEN"]
 
 llm = ChatOpenAI(
     model_name="gpt-4o",  # 'gpt-3.5-turbo', # 'text-davinci-003' , 'gpt-3.5-turbo'
-    temperature=0.3,
-    max_tokens=600,
+    temperature=0.2,
+    max_tokens=3200,
 )
 
 article_template = """
@@ -111,12 +111,38 @@ Please end with a complete sentence.
 """
 
 
+detailed_topic_template = """
+I want you to act as a naming consultant for scientific topics based on article abstracts.
+Act like a Systems Engineering and Technical Assistance (SETA) consultant. 
+
+Return a brief but detailed description of the scientific topic and applications related to
+the scientific field described by the sample texts. The description should be meaningful to an
+new intelligence analyst. Highlight typical applications. Highlight any dual use technologies that may be of concern to the United States
+Government.
+
+Provde a bullet list summary of the scientific topic related to these texts: {topic_texts}?
+Provide the summary in about 1000 words or less. 
+End with a complete sentence; the last character should be a period '.'.
+"""
+
+
+
 prompt_topic = PromptTemplate(
     input_variables=["topic_phrases"],
     template=topic_template,
 )
 
+
+detailed_prompt_topic = PromptTemplate(
+   # input_variables=["topic_phrases"],
+    input_variables=["topic_texts"],
+    template=detailed_topic_template,
+)
+
 chain_topic = LLMChain(llm=llm, prompt=prompt_topic)
+
+
+detailed_chain_topic= LLMChain(llm=llm, prompt=detailed_prompt_topic)
 
 
 def get_topic_llm_description(key_phrases: list):
@@ -126,6 +152,18 @@ def get_topic_llm_description(key_phrases: list):
     """
     topic_phrases = ", ".join(key_phrases)
     return chain_topic.run(topic_phrases=topic_phrases)
+
+
+
+def get_detailed_topic_llm_description(texts:list):
+    """
+    takes in the texts list
+    and returns the openai returned description.
+    """
+  #  st.write(type(texts))
+    topic_texts = ":: ".join(texts)
+    return detailed_chain_topic.run(topic_texts=topic_texts)
+
 
 
 pio.templates.default = "plotly_dark"
@@ -618,10 +656,14 @@ st.download_button(
 
 topic_keywords = df_selected_centroid['keywords'].to_list()[0]
 #st.write(topic_keywords)
-llm_topic_description = get_topic_llm_description(topic_keywords)
-st.write(llm_topic_description)
+#llm_topic_description = get_topic_llm_description(topic_keywords)
+#st.write(llm_topic_description)
 
+topic_abstracts = df_selected_papers['abstract'].dropna().to_list()[:100]
+detailed_llm_topic_description = get_detailed_topic_llm_description(topic_abstracts)
+st.write(detailed_llm_topic_description)
 
+st.subheader(f"Publications in topic {selected_cluster}", divider='rainbow')
 st.write(f"publications in topic {selected_cluster}")
 st.data_editor(
         df_selected_papers[['x', 'y', 'id', 'title', 'doi', 'cluster', 
