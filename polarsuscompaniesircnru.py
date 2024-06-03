@@ -39,7 +39,7 @@ MAPBOX_TOKEN = st.secrets["MAPBOX_TOKEN"]
 
 llm = ChatOpenAI(
     model_name="gpt-4o",  # 'gpt-3.5-turbo', # 'text-davinci-003' , 'gpt-3.5-turbo'
-    temperature=0.2,
+    temperature=0.3,
     max_tokens=2200,
 )
 
