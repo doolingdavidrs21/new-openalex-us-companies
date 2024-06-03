@@ -117,8 +117,8 @@ Act like a Systems Engineering and Technical Assistance (SETA) consultant.
 
 
 
-Provde a summary of the scientific topic related to these texts: {topic_texts}?
-Provide the summary in about 1000 words or less. 
+Provde a global summary of the scientific topics related to these texts: {topic_texts}?
+Your summary should give an overall sense of the topic and not give details of each abstract individually.
 End with a complete sentence; the last character should be a period '.'.
 """
 
