@@ -120,7 +120,7 @@ the scientific field described by the sample texts. The description should be me
 new intelligence analyst. Highlight typical applications. Highlight any dual use technologies that may be of concern to the United States
 Government.
 
-Provde a bullet list summary of the scientific topic related to these texts: {topic_texts}?
+Provde a summary of the scientific topic related to these texts: {topic_texts}?
 Provide the summary in about 1000 words or less. 
 End with a complete sentence; the last character should be a period '.'.
 """
